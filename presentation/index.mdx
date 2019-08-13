@@ -1,0 +1,304 @@
+import {Cite, Appear, Code, List, ListItem, Link, Image} from 'spectacle';
+import {DarkSlide, CodeSlide, SideBySide} from './slides';
+import RegularComponent from './regular-component';
+
+# Componetizing end-to-end tests
+
+---
+
+## Ice-breaker questions
+
+---
+
+Who's written a web application?
+
+---
+
+Who writes unit tests?
+
+---
+
+Who writes end-to-end tests using Cypress, TestCafe, Selenium/Webdriver, etc?
+
+---
+
+Who thinks those tests are easy to write, debug or maintain?
+
+---
+
+## Writing end-to-end tests is hard
+<List>
+  <Appear><ListItem>Selectors</ListItem></Appear>
+  <Appear><ListItem>Race conditions</ListItem></Appear>
+  <Appear><ListItem>Data is hard to control</ListItem></Appear>
+  <Appear><ListItem>UI changes break tests</ListItem></Appear>
+</List>
+
+---
+
+<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div><Image src='avatar.jpg' alt='Profile Picture' /></div>
+  <div>
+    <h2>Nicholas Boll</h2>
+    <h4>Design System Engineer at Workday</h4>
+    I work on Canvas <Link href='https://design.workday.com'>design.workday.com</Link>
+  </div>
+</div>
+
+---
+
+## How do we break down application UI?
+
+---
+
+![Application](application.png)
+
+---
+
+![Application](application-componetized.png)
+
+---
+
+How would you target the email icon in a test?
+
+---
+
+![Application](application-componetized-email.png)
+
+---
+
+## Selector?
+<List>
+  <Appear><ListItem><Code theme='light'>//body/div[3]/div[2]/div[1]/a</Code></ListItem></Appear>
+  <Appear><ListItem><Code>.icon-email</Code></ListItem></Appear>
+  <Appear><ListItem><Code>[data-testid=email]</Code></ListItem></Appear>
+</List>
+
+---
+
+## Where should these selectors go?
+
+---
+export default CodeSlide
+
+## Co-located with source file
+
+```javascript
+// my-component.jsx
+\import React from 'react'
+\t
+\export const selector = '[data-testid=email]' // <-- here
+\t
+\export const EmailIcon = () => {
+  <Icon data-testid='email' type='email' />
+}
+```
+
+---
+
+<div style={{ display: 'flex' }}>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Pros:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Very easy for unit-level testing</li>
+      <li>Easy to tell where it is</li>
+    </ul>
+  </div>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Cons:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Bad for end-to-end testing. All of React will be imported!</li>
+    </ul>
+  </div>
+</div>
+
+---
+export default CodeSlide
+
+## global selectors file
+
+```javascript
+// selectors.js
+\export const selectors = {
+  emailIcon: '[data-testid=email]',
+  searchIcon: '[data-testid=search]',
+  listItem: '[data-testid=listItem]',
+  // etc
+}
+\t
+// test file
+\import * as selectors from './selectors'
+\t
+cy.get(selectors.emailIcon)
+```
+
+---
+
+<div style={{ display: 'flex' }}>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Pros:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Easy to see all selectors at once</li>
+    </ul>
+  </div>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Cons:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Not modular</li>
+    </ul>
+  </div>
+</div>
+
+---
+export default CodeSlide
+
+## local selector file
+
+```javascript
+// selectors/icons.js
+\t
+\export const selectors = {
+  email: '[data-testid=email]',
+  search: '[data-testid=search]',
+  // etc
+}
+\t
+// selectors/index.js
+\export * as icons from './icons'
+\t
+// in test
+\import * as selectors from './selectors'
+\t
+cy.get(selectors.icons.email)
+```
+
+---
+
+<div style={{ display: 'flex' }}>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Pros:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Modular</li>
+    </ul>
+  </div>
+  <div style={{ flex: '1 1 50%' }}>
+    <h3>Cons:</h3>
+    <ul style={{ textAlign: 'left' }}>
+      <li>Are selectors powerful enough?</li>
+    </ul>
+  </div>
+</div>
+
+---
+
+How would you target an item on the Todo to check it off?
+
+---
+
+![Application](application-componetized-todo.png)
+
+---
+
+This is too complicated for selectors
+
+---
+
+Examples are in Cypress.io, but could work for any test framework
+
+---
+
+## Testing Library
+<List>
+  <ListItem><Link href='https://testing-library.com/'>https://testing-library.com/</Link></ListItem>
+  <Appear><ListItem>Adapters for React, ReasonReact, Vue, Marko, Cypress, Puppeteer, TestCafe, etc</ListItem></Appear>
+  <Appear><ListItem>Even a helper for <Code>react-select</Code></ListItem></Appear>
+</List>
+
+---
+
+```javascript
+cy
+  .queryByText('Upgrade to SSD harddisks')
+  .click()
+```
+
+---
+
+What if there is a lot of custom interactions?
+
+---
+
+## Component helpers
+
+---
+export default CodeSlide
+
+```javascript
+// helpers/todos.js
+\export getTodoByName = name => (
+  cy.get(`.todo-item:contains('${name}')`)
+)
+\t
+\export getCheckbox = $el => (
+  $el.find('.todo-item-checkbox')
+)
+\t
+\export checkTodoItem = name => (
+  getByName(name)
+    .pipe(getCheckbox)
+    .click()
+)
+```
+
+---
+export default CodeSlide
+
+```javascript
+h.todos.checkTodoItem('Upgrade to SSD harddisks')
+
+h.todos.getTodoByName('Upgrade to SSD harddisks')
+  .pipe(h.todos.getCheckbox)
+  .should('be.checked')
+```
+
+---
+
+## Other components
+<List>
+  <Appear><ListItem>Components with portalled content</ListItem></Appear>
+  <Appear><ListItem>Hierarchical Menus</ListItem></Appear>
+  <Appear><ListItem>Combo boxes</ListItem></Appear>
+  <Appear><ListItem>Cards</ListItem></Appear>
+  <Appear><ListItem>Dashboard widgets</ListItem></Appear>
+  <Appear><ListItem>Virtual lists</ListItem></Appear>
+</List>
+
+---
+
+## Demo
+### Select component with a virtualized list of options
+
+---
+
+## Component helpers abstract implementation
+
+---
+
+Just like Components are a contract for developing UI,
+Component helpers are a contract for testing UI
+
+---
+
+## Implementation can be changed without breaking tests
+
+---
+
+## Component helpers can be composed
+
+---
+
+## Links:
+* [https://design.workday.com](https://design.workday.com)
+* [https://testing-library.com/docs/dom-testing-library/intro](https://testing-library.com/docs/dom-testing-library/intro)
+* [https://examples.sencha.com/extjs/7.0.0/examples/admin-dashboard/](https://examples.sencha.com/extjs/7.0.0/examples/admin-dashboard/)
+* [https://cypress.io](https://cypress.io)
