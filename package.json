@@ -8,6 +8,7 @@
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.production.js",
     "deploy": "npm run clean & npm run build && surge -p .",
     "export": "spectacle-renderer --delay 3000",
+    "cypress:open": "cypress open",
     "start": "cross-env NODE_ENV=development node server.js"
   },
   "author": "",

@@ -18,4 +18,28 @@ OR
 npm install
 ```
 
-Once that is complete, the following command
+Once that is complete, the following commands will open Cypress in debug mode:
+
+```
+yarn cypress open
+```
+
+OR
+
+```
+npm run cypress:open
+```
+
+## Run presentation
+
+Slides are available in MDX form at `/presentation/index.mdx`. If you want to run the slide deck locally, you can do so by running
+
+```
+yarn start
+```
+
+OR
+
+```
+npm start
+```
